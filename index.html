@@ -8,9 +8,8 @@
 </head>
 
 <body>
-  <div id="app">
-    <div class="name"></div>
-  </div>
+  <div id="app"></div>
+  <input type="text" id="input">
 
   <script src="mvvm.js"></script>
   <script>
@@ -20,14 +19,15 @@
         name: "ifredom"
       }
     })
-    console.log(vm);
-    console.log(vm.name);
+
     setTimeout(() => {
-      vm._data.name = "Tom";
-      console.log(vm);
-      console.log(vm.name);
-      console.log(vm._data.name);
+      vm.name = "Tom";
     }, 2000);
+
+    var input = document.querySelector("#input");
+    input.addEventListener("input",function(e){
+      vm.name = e.target.value;
+    })
 
   </script>
 </body>

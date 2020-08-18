@@ -1,15 +1,13 @@
 class Mvvm {
   constructor(options) {
     this.el = document.querySelector(options.el);
-    this._data = options.data; // 
+    this._data = options.data; //
 
-    this.proxyData(options.data);
-
-    options.el.innerHTML = this.data[exp];  // 初始化模板数据的值
+    this.proxyData(options, options.data);
   }
 
   // 参数代理, 实现 vm.xxx -> vm._data.xxx
-  proxyData(data) {
+  proxyData(options, data) {
     Object.keys(data).forEach((key) => {
       Object.defineProperty(this, key, {
         get() {
@@ -17,6 +15,7 @@ class Mvvm {
         },
         set(newValue) {
           this._data[key] = newValue;
+          this.el.innerHTML = this._data[key]; // 更改模板数据的值
         },
         enumerable: true,
         configurable: true,
