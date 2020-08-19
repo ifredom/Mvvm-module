@@ -15,9 +15,6 @@ class Observer {
         },
         set(newValue) {
           dep.sendMessage();
-          // that._data[key] = newValue;
-          // that.el.innerHTML = that._data[key];
-          var compiler = new Compiler(vm, newValue, key);
         },
         enumerable: true,
         configurable: true,
