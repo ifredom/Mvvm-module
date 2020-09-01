@@ -16,6 +16,7 @@
   <div id="app">
     <div v-html="name"></div>
     <div v-class="name">测测修改class</div>
+    <div v-on:click="doSomething">点击做点什么</div>
   </div>
   <input type="text" id="input">
 
@@ -27,7 +28,12 @@
       el: "#app",
       data: {
         name: "ifredom"
-      }
+      },
+      methods: {
+        doSomething:function(){
+          console.log("dothing");
+        }
+      },
     })
 
     setTimeout(() => {

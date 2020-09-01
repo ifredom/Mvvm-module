@@ -9,11 +9,12 @@ class Compile {
   }
 
   compileElement(el) {
+    this.compileUtil = new CompileUtil();
     var childNodes = el.childNodes;
     var self = this;
-    console.log(childNodes);
 
     var copyChildNodes = [].slice.call(childNodes);
+
     copyChildNodes.forEach((node) => {
       var text = node.textContent;
       var reg = /\{\{(.*)\}\}/;
@@ -23,6 +24,10 @@ class Compile {
       } else if (this.isTextNode(node) && reg.test(text)) {
         this.compileText(node, RegExp.$1.trim());
       }
+
+      if (node.childNodes && node.childNodes.length) {
+        this.compileElement(node);
+      }
     });
   }
   compile(node) {
@@ -30,20 +35,25 @@ class Compile {
     var self = this;
     console.log(nodeAttrs);
     var copyNodeAttrs = [].slice.call(nodeAttrs);
+
     copyNodeAttrs.forEach((attr) => {
       var attrName = attr.name;
-      console.log(attrName);
+
       if (this.isDirective(attrName)) {
         var exp = attr.value;
         var dir = attrName.substring(2);
-        if (dir == "html") {
-          // new Watcher();
-        } else if (dir == "class") {
+
+        if (this.isEventDirective(dir)) {
+          this.compileUtil.eventHandle(node, this.$vm, exp, dir);
+        } else {
+          this.compileUtil[dir] && this.compileUtil[dir](node, exp);
         }
       }
     });
   }
-  compileText(node, direct) {}
+  compileText(node, exp) {
+    this.compileUtil.text(node, this.$vm, exp);
+  }
 
   htmlUpdate(vm, key) {
     console.log(this.$vm.el);
@@ -58,6 +68,10 @@ class Compile {
   isDirective(attr) {
     return attr.indexOf("v-") == 0;
   }
+  // 是否是事件的指令，v-on:这样的形式
+  isEventDirective(attr) {
+    return attr.indexOf("on") == 0;
+  }
 
   // 是否是元素节点
   isElementNode(node) {
@@ -66,5 +80,31 @@ class Compile {
   // 是否是文本内容节点
   isTextNode(node) {
     return node.nodeType == 3;
+  }
+}
+
+class CompileUtil {
+  eventHandle(node, vm, exp, dir) {
+    var eventType = dir.split(":")[1];
+    var fn = vm.$options.methods && vm.$options.methods[exp];
+    if (eventType && fn) {
+      node.addEventListener(exp, fn.bind(vm), false);
+    }
+  }
+  bind(node, vm, exp, dir) {
+    console.log("bind fn=>", dir);
+  }
+
+  text(node, vm, exp) {
+    this.bind(node, vm, exp, "text");
+  }
+  html(node, vm, exp) {
+    this.bind(node, vm, exp, "html");
+  }
+  model(node, vm, exp) {
+    this.bind(node, vm, exp, "model");
+  }
+  class(node, vm, exp) {
+    this.bind(node, vm, exp, "class");
   }
 }
