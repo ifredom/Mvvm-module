@@ -7,6 +7,10 @@
   <title>mvvm-demo</title>
   <style>
     .blue {
+      color: blue;
+    }
+
+    .red {
       color: red;
     }
   </style>
@@ -14,31 +18,38 @@
 
 <body>
   <div id="app">
+    <div v-text="name"></div>
     <div v-html="name"></div>
-    <div v-class="name">测测修改class</div>
-    <div v-on:click="doSomething">点击做点什么</div>
+    <div>{{name}}</div>
+    <div v-class="changeClass">测测修改class</div>
+    <button v-on:click="doSomething">点击</button>
   </div>
   <input type="text" id="input">
 
-  <script src="compile.js"></script>
   <script src="observer.js"></script>
+  <script src="watcher.js"></script>
+  <script src="compile.js"></script>
   <script src="mvvm.js"></script>
   <script>
     var vm = new Mvvm({
       el: "#app",
       data: {
-        name: "ifredom"
+        name: "ifredom",
+        age: 18,
+        changeClass: 'blue'
       },
       methods: {
-        doSomething:function(){
+        doSomething: function () {
           console.log("dothing");
+          this.changeClass = "red";
         }
       },
     })
 
-    setTimeout(() => {
-      vm.name = "Tom";
-    }, 2000);
+    // setTimeout(() => {
+    //   vm.name = "Tom";
+    //   console.log(vm);
+    // }, 2000);
 
     var input = document.querySelector("#input");
     input.addEventListener("input", function (e) {

@@ -48,12 +48,10 @@ class Compile {
   compile(node) {
     var nodeAttrs = node.attributes;
     var self = this;
-    console.log(nodeAttrs);
     var copyNodeAttrs = [].slice.call(nodeAttrs);
 
     copyNodeAttrs.forEach((attr) => {
       var attrName = attr.name;
-
       if (this.isDirective(attrName)) {
         var exp = attr.value;
         var dir = attrName.substring(2);
@@ -61,22 +59,13 @@ class Compile {
         if (this.isEventDirective(dir)) {
           this.compileUtil.eventHandle(node, this.$vm, exp, dir);
         } else {
-          this.compileUtil[dir] && this.compileUtil[dir](node, exp);
+          this.compileUtil[dir] && this.compileUtil[dir](node, this.$vm, exp);
         }
       }
     });
   }
   compileText(node, exp) {
     this.compileUtil.text(node, this.$vm, exp);
-  }
-
-  htmlUpdate(vm, key) {
-    console.log(this.$vm.el);
-    this.$vm.el.innerHTML = this.$vm._data[key];
-  }
-
-  classUpdate(node, value) {
-    node.className = value;
   }
 
   // 是否是规定的指令，v-这样的形式
@@ -102,12 +91,38 @@ class CompileUtil {
     var eventType = dir.split(":")[1];
     var fn = vm.$options.methods && vm.$options.methods[exp];
     if (eventType && fn) {
-      node.addEventListener(exp, fn.bind(vm), false);
+      node.addEventListener(eventType, fn.bind(vm), false);
     }
   }
   bind(node, vm, exp, dir) {
-    console.log("bind fn=>", dir);
+    var updaterFn = Updater[dir + "Updater"];
+    updaterFn && updaterFn(node, this._getVMVal(vm, exp));
+
+    new Watcher(vm, exp, function (value, oldValue) {
+      updaterFn && updaterFn(node, value, oldValue);
+    });
   }
+  _getVMVal(vm, exp) {
+    var copyVm = vm;
+    exp = exp.split(".");
+    exp.forEach(function (k) {
+      copyVm = copyVm[k];
+    });
+    return copyVm;
+  }
+  _setVMVal(vm, exp, value) {
+    var copyVm = vm;
+    exp = exp.split(".");
+    exp.forEach(function (k, i) {
+      // 非最后一个key，更新copyVm的值
+      if (i < exp.length - 1) {
+        copyVm = copyVm[k];
+      } else {
+        copyVm[k] = value;
+      }
+    });
+  }
+
   text(node, vm, exp) {
     this.bind(node, vm, exp, "text");
   }
@@ -116,8 +131,37 @@ class CompileUtil {
   }
   model(node, vm, exp) {
     this.bind(node, vm, exp, "model");
+    var that = this;
+    var val = this._getVMVal(vm, exp);
+    node.addEventListener("input", function (e) {
+      var newValue = e.target.value;
+      if (val === newValue) {
+        return;
+      }
+      that._setVMVal(vm, exp, newValue);
+      val = newValue;
+    });
   }
   class(node, vm, exp) {
     this.bind(node, vm, exp, "class");
+  }
+}
+
+class Updater {
+  static textUpdater(node, value) {
+    console.log();
+    node.textContent = typeof value == "undefined" ? "" : value;
+  }
+  static htmlUpdater(node, value) {
+    node.innerHTML = typeof value == "undefined" ? "" : value;
+  }
+  static classUpdater(node, value, oldVal) {
+    var className = node.className;
+    className = className.replace(oldVal, "").replace(/\s$/, "");
+    var space = className && String(value) ? " " : "";
+    node.className = className + space + value;
+  }
+  static modelUpdater(node, value, oldValue) {
+    node.value = typeof value == "undefined" ? "" : value;
   }
 }
