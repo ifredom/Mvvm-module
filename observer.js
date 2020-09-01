@@ -7,7 +7,7 @@ class Observer {
   proxyData(vm, data) {
     var that = vm;
     var dep = new Dep();
-    
+
     Object.keys(data).forEach((key) => {
       Object.defineProperty(that, key, {
         get() {
@@ -23,14 +23,24 @@ class Observer {
   }
 }
 
+var uid = 0;
 class Dep {
   constructor() {
+    this.id = uid++;
     this.allMessage = [];
   }
+  target = null;
   addFollower(oneMessage) {
     this.allMessage.push(oneMessage);
+  }
+  removeFollower(sub) {
+    var index = this.allMessage.indexOf(sub);
+    if (index != -1) {
+      this.allMessage.slice(index, 1);
+    }
   }
   sendMessage() {
     this.allMessage.forEach((sub) => sub.getMessage());
   }
 }
+Dep.target = null; // 静态属性

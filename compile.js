@@ -2,10 +2,25 @@ class Compile {
   constructor(el, vm, newValue, key) {
     this.$vm = vm;
     this.$el = this.isElementNode(el) ? el : document.querySelector(el);
-    this.compileElement(this.$el);
 
-    // vm._data[key] = newValue;
-    // this.htmlUpdate(vm, key);
+    if (this.$el) {
+      this.$fragment = this.node2Fragment(this.$el);
+      this.init();
+      this.$el.appendChild(this.$fragment);
+    }
+  }
+  init() {
+    this.compileElement(this.$fragment);
+  }
+
+  node2Fragment(el) {
+    var fragment = document.createDocumentFragment();
+    var child;
+    // 将原生节点拷贝到fragment
+    while ((child = el.firstChild)) {
+      fragment.appendChild(child);
+    }
+    return fragment;
   }
 
   compileElement(el) {
@@ -72,7 +87,6 @@ class Compile {
   isEventDirective(attr) {
     return attr.indexOf("on") == 0;
   }
-
   // 是否是元素节点
   isElementNode(node) {
     return node.nodeType == 1;
@@ -94,7 +108,6 @@ class CompileUtil {
   bind(node, vm, exp, dir) {
     console.log("bind fn=>", dir);
   }
-
   text(node, vm, exp) {
     this.bind(node, vm, exp, "text");
   }
